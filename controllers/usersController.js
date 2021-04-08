@@ -5,48 +5,48 @@ const User = require("../models/user");
 
 const getUserParams = body => {
     return {
-      name: {
-        first: body.first,
-        last: body.last
-      },
-      email: body.email,
-      password: body.password,
-      zipCode: body.zipCode
+        name: {
+            first: body.first,
+            last: body.last
+        },
+        email: body.email,
+        password: body.password,
+        zipCode: body.zipCode
     };
-  };
+};
 
-module.exports={
-    login: (req, res) =>{
+module.exports = {
+    login: (req, res) => {
         res.render("users/login");
     },
-    index: (req, res, next)=>{
+    index: (req, res, next) => {
         User.find()
-        .then(users=>{
-            res.locals.users = users;
-            next()
-        })
-        .catch(error=>{
-            console.log(`Error fetching user data: ${error.message}`);
-            next(error);
-        });
+            .then(users => {
+                res.locals.users = users;
+                next()
+            })
+            .catch(error => {
+                console.log(`Error fetching user data: ${error.message}`);
+                next(error);
+            });
     },
-    indexView: (req, res) =>{
+    indexView: (req, res) => {
         res.render("users/index");
     },
-    new: (req, res) =>{
+    new: (req, res) => {
         res.render("users/new");
     },
-    create: (req, res, next)=>{
-        if(req.skip) return next();
+    create: (req, res, next) => {
+        if (req.skip) return next();
         let newUser = new User(getUserParams(req.body));
-        
-        User.register(newUser, req.body.password, (error, user) =>{
-            if(user){
+
+        User.register(newUser, req.body.password, (error, user) => {
+            if (user) {
                 req.flash("success", "User account successfully created!");
                 res.locals.redirect = "/users";
                 next();
             }
-            else{
+            else {
                 req.flash("error", `Failed to create user account: ${error.message}`);
                 res.locals.redirect = "/users/new";
                 next();
@@ -65,12 +65,12 @@ module.exports={
         });
         req.check("password", "Password cannot be empty").notEmpty();
 
-        req.getValidationResult().then((error) =>{
-            if(!error.isEmpty()){
-                let messages = error.array().map(e=>e.msg);
+        req.getValidationResult().then((error) => {
+            if (!error.isEmpty()) {
+                let messages = error.array().map(e => e.msg);
                 req.flash("error", messages.join(" and "));
                 req.skip = true;
-                res.local.redirect = "/users/new";
+                res.locals.redirect = "/users/new";
                 next();
             }
             else next();
@@ -82,44 +82,44 @@ module.exports={
         successRedirect: "/",
         successFlash: "Logged in!"
     }),
-    logout: (req, res, next)=>{
+    logout: (req, res, next) => {
         req.logout();
         req.flash("success", "You have been logged out!");
         res.locals.redirect = "/";
         next();
     },
-    redirectView: (req, res, next) =>{
+    redirectView: (req, res, next) => {
         let redirectPath = res.locals.redirect;
-        if(redirectPath != undefined) res.redirect(redirectPath);
+        if (redirectPath != undefined) res.redirect(redirectPath);
         else next();
     },
-    show: (req, res, next)=>{
+    show: (req, res, next) => {
         let userId = req.params.id;
         User.findById(userId)
-        .then(user=>{
-            res.locals.user = user;
-            next();
-        })
-        .catch(error=>{
-            console.log(`Error fetching user by ID: ${error.message}`);
-        });
+            .then(user => {
+                res.locals.user = user;
+                next();
+            })
+            .catch(error => {
+                console.log(`Error fetching user by ID: ${error.message}`);
+            });
     },
-    showView: (req, res) =>{
+    showView: (req, res) => {
         res.render("users/show");
     },
-    edit: (req, res, next)=>{
+    edit: (req, res, next) => {
         let userId = req.params.id;
         User.findById(userId)
-        .then(user=>{
-            res.render("users/edit", {user: user});
-        })
-        .catch(error=>{
-            console.log(`Error fetching user by ID: ${error.message}`);
-            next(error);
-        });
+            .then(user => {
+                res.render("users/edit", { user: user });
+            })
+            .catch(error => {
+                console.log(`Error fetching user by ID: ${error.message}`);
+                next(error);
+            });
     },
     update: (req, res, next) => {
-        if(req.skip) return next();
+        if (req.skip) return next();
         let userId = req.params.id;
         let updatedUser = new User({
             name: {
@@ -130,28 +130,38 @@ module.exports={
             password: req.body.password,
             zipCode: req.body.zipCode
         });
-        User.findByIdAndUpdate(userId, updatedUser)
-        .then(user=>{
-            res.locals.user = user;
-            res.local.redirect="/users/${user._id}";
-            next();
-        })
-        .catch(error=>{
-            console.log(`Error fetching user by ID: ${error.message}`);
-            next(error);
-        });
+        User.findByIdAndUpdate(userId,
+            {
+                $set:
+                {
+                    'name.first': req.body.first,
+                    'name.last': req.body.last,
+                    email: req.body.email,
+                    zipCode: req.body.zipCode
+                }
+            }
+        )
+            .then(user => {
+                res.locals.user = user;
+                res.locals.redirect = `/users/${user._id}`;
+                next();
+            })
+            .catch(error => {
+                console.log(`Error fetching user by ID: ${error.message}`);
+                next(error);
+            });
     },
-    delete: (req, res, next) =>{
+    delete: (req, res, next) => {
         let userId = req.params.id;
         User.findByIdAndRemove(userId)
-        .then(() =>{
-            res.locals.redirect = "/users";
-            next();
-        })
-        .catch(error=>{
-            console.log(`Error fetching user by ID: ${error.message}`);
-            next(error);
-        });
+            .then(() => {
+                res.locals.redirect = "/users";
+                next();
+            })
+            .catch(error => {
+                console.log(`Error fetching user by ID: ${error.message}`);
+                next(error);
+            });
     }
 }
 

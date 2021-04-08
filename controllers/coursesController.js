@@ -75,10 +75,17 @@ module.exports={
             maxStudents: req.body.maxStudents,
             cost: req.body.cost
         });
-        Course.findByIdAndUpdate(courseId, updatedCourse)
+        Course.findByIdAndUpdate(courseId,
+            {
+                title: req.body.title,
+                description: req.body.description,
+                maxStudents: req.body.maxStudents,
+                cost: req.body.cost
+            }
+            )
         .then(course=>{
             res.locals.course = course;
-            res.local.redirect="courses/${course._id}";
+            res.locals.redirect=`/courses/${course._id}`;
             next();
         })
         .catch(error=>{

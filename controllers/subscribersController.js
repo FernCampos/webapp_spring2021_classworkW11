@@ -73,10 +73,16 @@ module.exports={
             email: req.body.email,
             zipCode: req.body.zipCode
         });
-        Subscriber.findByIdAndUpdate(subscriberId, updatedSubscriber)
+        Subscriber.findByIdAndUpdate(subscriberId,
+            {
+                name: req.body.name,
+                email: req.body.email,
+                zipCode: req.body.zipCode
+            }
+            )
         .then(subscriber=>{
             res.locals.subscriber = subscriber;
-            res.local.redirect="/subscribers/${subscriber._id}";
+            res.locals.redirect=`/subscribers/${subscriber._id}`;
             next();
         })
         .catch(error=>{
